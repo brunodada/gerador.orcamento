@@ -146,7 +146,15 @@ body {
 .form__group input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
-  background: rgba(15, 23, 42, 1);
+  background: #ffffff;
+  color: #111827;
+}
+
+.service-row__field input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25);
+  background: #ffffff;
+  color: #111827;
 }
 
 .services {
@@ -320,6 +328,11 @@ body {
 
 .hidden-file-input {
   display: none;
+}
+
+.login-form {
+  max-width: 260px;
+  margin: 0 auto;
 }
 
 .footer {

@@ -16,6 +16,8 @@ const resultDate = document.getElementById("result-date");
 const resultServicesBody = document.getElementById("result-services-body");
 const resultTotal = document.getElementById("result-total");
 
+let inMemoryBudgets = [];
+
 function ensureAuthenticated() {
   const isLoggedIn = localStorage.getItem("orcamento_logged_in") === "true";
   if (!isLoggedIn) {
@@ -175,19 +177,11 @@ function updateResultPanel(formData, services) {
 }
 
 function loadBudgets() {
-  try {
-    const raw = localStorage.getItem("orcamentos_salvos");
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    return [];
-  } catch {
-    return [];
-  }
+  return inMemoryBudgets;
 }
 
 function saveBudgets(list) {
-  localStorage.setItem("orcamentos_salvos", JSON.stringify(list));
+  inMemoryBudgets = Array.isArray(list) ? list : [];
 }
 
 function buildBudgetObject(formData, services) {
