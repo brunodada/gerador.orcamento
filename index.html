@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerador de Orçamento</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header__content">
+      <h1 class="logo">Gerador de Orçamento</h1>
+      <p class="subtitle">Crie orçamentos rápidos e profissionais diretamente no navegador.</p>
+    </div>
+  </header>
+
+  <main class="main container">
+    <section class="card">
+      <h2 class="card__title">Dados do Cliente</h2>
+      <form id="budget-form" class="form">
+        <div class="form__row">
+          <div class="form__group">
+            <label for="client-name">Nome do cliente</label>
+            <input type="text" id="client-name" name="clientName" placeholder="Ex: João da Silva" required />
+          </div>
+          <div class="form__group">
+            <label for="client-email">E-mail</label>
+            <input type="email" id="client-email" name="clientEmail" placeholder="Ex: joao@email.com" />
+          </div>
+        </div>
+
+        <div class="form__row">
+          <div class="form__group">
+            <label for="client-phone">Telefone</label>
+            <input type="tel" id="client-phone" name="clientPhone" placeholder="Ex: (11) 99999-9999" />
+          </div>
+          <div class="form__group">
+            <label for="budget-date">Data</label>
+            <input type="date" id="budget-date" name="budgetDate" />
+          </div>
+        </div>
+
+        <h2 class="card__title card__title--spaced">Serviços</h2>
+
+        <div id="services-list" class="services">
+          <!-- Linha de serviço adicionada via JS como template inicial -->
+        </div>
+
+        <button type="button" id="add-service" class="btn btn--secondary">
+          + Adicionar serviço
+        </button>
+
+        <div class="total">
+          <div class="total__info">
+            <span class="total__label">Total do orçamento</span>
+            <strong id="total-amount" class="total__value">R$ 0,00</strong>
+          </div>
+          <button type="submit" class="btn btn--primary">
+            Gerar orçamento
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section id="budget-result" class="card card--result" aria-live="polite">
+      <h2 class="card__title">Resumo do Orçamento</h2>
+      <div class="result__header">
+        <div>
+          <p class="result__label">Cliente</p>
+          <p id="result-client-name" class="result__value result__value--strong">—</p>
+        </div>
+        <div>
+          <p class="result__label">Data</p>
+          <p id="result-date" class="result__value">—</p>
+        </div>
+      </div>
+
+      <div class="result__services">
+        <h3 class="result__subtitle">Serviços</h3>
+        <table class="result__table">
+          <thead>
+            <tr>
+              <th>Serviço</th>
+              <th class="align-right">Qtd.</th>
+              <th class="align-right">Valor unitário</th>
+              <th class="align-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody id="result-services-body">
+            <!-- Linhas de serviços geradas via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="result__footer">
+        <span class="result__total-label">Total</span>
+        <strong id="result-total" class="result__total-value">R$ 0,00</strong>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__content">
+      <span>Gerador de Orçamento</span>
+      <span class="footer__small">Exemplo educacional em HTML, CSS e JavaScript.</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
