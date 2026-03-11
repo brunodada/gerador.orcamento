@@ -8,6 +8,8 @@ const printButton = document.getElementById("print-budget");
 const downloadTxtButton = document.getElementById("download-txt");
 const logoutButton = document.getElementById("logout-button");
 const historyList = document.getElementById("history-list");
+const importButton = document.getElementById("import-budget");
+const importFileInput = document.getElementById("import-file");
 
 const resultClientName = document.getElementById("result-client-name");
 const resultDate = document.getElementById("result-date");
@@ -333,6 +335,112 @@ function downloadBudgetTxt(budget) {
   URL.revokeObjectURL(url);
 }
 
+function parseBudgetFromTxt(text) {
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
+  if (!lines[0]?.startsWith("ORÇAMENTO")) {
+    throw new Error("Formato de arquivo não reconhecido.");
+  }
+
+  let clientName = "Sem nome";
+  let email = "";
+  let phone = "";
+  let date = "";
+  const services = [];
+  let total = 0;
+
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.startsWith("Cliente:")) {
+      clientName = line.replace("Cliente:", "").trim() || clientName;
+    } else if (line.startsWith("E-mail:")) {
+      email = line.replace("E-mail:", "").trim();
+    } else if (line.startsWith("Telefone:")) {
+      phone = line.replace("Telefone:", "").trim();
+    } else if (line.startsWith("Data do orçamento:")) {
+      date = line.replace("Data do orçamento:", "").trim();
+    } else if (line.startsWith("Serviços:")) {
+      i += 2;
+      while (i < lines.length) {
+        const svcLine = lines[i];
+        if (!svcLine || svcLine.startsWith("Total:")) {
+          break;
+        }
+        const parts = svcLine.split("|").map((p) => p.trim());
+        if (parts.length >= 4) {
+          const name = parts[0];
+          const qty = Number(parts[1]) || 0;
+          const unit = parseCurrencyInput(parts[2].replace(/[R$\s]/g, ""));
+          const subtotal = parseCurrencyInput(parts[3].replace(/[R$\s]/g, ""));
+          services.push({
+            name,
+            quantity: qty,
+            price: unit,
+            subtotal: subtotal || qty * unit,
+          });
+        }
+        i++;
+      }
+    } else if (line.startsWith("Total:")) {
+      const valuePart = line.replace("Total:", "").trim().replace(/[R$\s]/g, "");
+      total = parseCurrencyInput(valuePart);
+    }
+    i++;
+  }
+
+  if (!services.length) {
+    throw new Error("Nenhum serviço encontrado no arquivo.");
+  }
+
+  if (!date) {
+    date = new Date().toISOString().slice(0, 10);
+  }
+
+  if (!total) {
+    total = services.reduce((sum, s) => sum + s.subtotal, 0);
+  }
+
+  return {
+    id: Date.now(),
+    clientName,
+    email,
+    phone,
+    date,
+    services,
+    total,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function handleImportFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const text = String(reader.result || "");
+      const importedBudget = parseBudgetFromTxt(text);
+      const list = loadBudgets();
+      list.push(importedBudget);
+      saveBudgets(list);
+      renderHistory(list);
+      fillResultFromBudget(importedBudget);
+      alert("Orçamento importado com sucesso!");
+    } catch (error) {
+      alert(error.message || "Não foi possível importar o arquivo.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+  reader.onerror = () => {
+    alert("Erro ao ler o arquivo. Tente novamente.");
+    event.target.value = "";
+  };
+  reader.readAsText(file, "utf-8");
+}
+
 function setupEvents() {
   if (addServiceButton) {
     addServiceButton.addEventListener("click", () => {
@@ -393,6 +501,14 @@ function setupEvents() {
       localStorage.removeItem("orcamento_logged_in");
       window.location.href = "login.html";
     });
+  }
+
+  if (importButton && importFileInput) {
+    importButton.addEventListener("click", () => {
+      importFileInput.click();
+    });
+
+    importFileInput.addEventListener("change", handleImportFile);
   }
 }
 

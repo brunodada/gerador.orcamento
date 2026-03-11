@@ -107,9 +107,15 @@
           <span class="result__total-label">Total</span>
           <strong id="result-total" class="result__total-value">R$ 0,00</strong>
         </div>
-        <button type="button" id="download-txt" class="btn btn--light btn--small">
-          Baixar TXT
-        </button>
+        <div class="total__actions">
+          <button type="button" id="download-txt" class="btn btn--light btn--small">
+            Baixar TXT
+          </button>
+          <button type="button" id="import-budget" class="btn btn--light btn--small">
+            Importar TXT
+          </button>
+          <input type="file" id="import-file" accept=".txt" class="hidden-file-input" />
+        </div>
       </div>
 
       <div class="history">
