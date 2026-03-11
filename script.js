@@ -4,11 +4,26 @@ const servicesList = document.getElementById("services-list");
 const addServiceButton = document.getElementById("add-service");
 const totalAmountEl = document.getElementById("total-amount");
 const budgetForm = document.getElementById("budget-form");
+const printButton = document.getElementById("print-budget");
+const downloadTxtButton = document.getElementById("download-txt");
+const logoutButton = document.getElementById("logout-button");
+const historyList = document.getElementById("history-list");
 
 const resultClientName = document.getElementById("result-client-name");
 const resultDate = document.getElementById("result-date");
 const resultServicesBody = document.getElementById("result-services-body");
 const resultTotal = document.getElementById("result-total");
+
+function ensureAuthenticated() {
+  const isLoggedIn = localStorage.getItem("orcamento_logged_in") === "true";
+  if (!isLoggedIn) {
+    window.location.href = "login.html";
+  }
+}
+
+if (budgetForm) {
+  ensureAuthenticated();
+}
 
 function formatCurrency(value) {
   return value.toLocaleString("pt-BR", {
@@ -26,6 +41,8 @@ function parseCurrencyInput(value) {
 }
 
 function createServiceRow() {
+  if (!servicesList) return;
+
   const row = document.createElement("div");
   row.className = "service-row";
 
@@ -88,6 +105,8 @@ function createServiceRow() {
 }
 
 function getServicesFromForm() {
+  if (!servicesList) return [];
+
   const rows = servicesList.querySelectorAll(".service-row");
   const services = [];
 
@@ -111,12 +130,15 @@ function getServicesFromForm() {
 }
 
 function updateTotal() {
+  if (!totalAmountEl) return;
   const services = getServicesFromForm();
   const total = services.reduce((sum, service) => sum + service.subtotal, 0);
   totalAmountEl.textContent = formatCurrency(total);
 }
 
 function updateResultPanel(formData, services) {
+  if (!resultClientName || !resultDate || !resultServicesBody || !resultTotal) return;
+
   const clientName = formData.get("clientName")?.toString().trim() || "—";
   const dateRaw = formData.get("budgetDate")?.toString();
 
@@ -150,27 +172,233 @@ function updateResultPanel(formData, services) {
   resultTotal.textContent = formatCurrency(total);
 }
 
-addServiceButton?.addEventListener("click", () => {
+function loadBudgets() {
+  try {
+    const raw = localStorage.getItem("orcamentos_salvos");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function saveBudgets(list) {
+  localStorage.setItem("orcamentos_salvos", JSON.stringify(list));
+}
+
+function buildBudgetObject(formData, services) {
+  const clientName = formData.get("clientName")?.toString().trim() || "Sem nome";
+  const email = formData.get("clientEmail")?.toString().trim() || "";
+  const phone = formData.get("clientPhone")?.toString().trim() || "";
+  const dateRaw = formData.get("budgetDate")?.toString();
+  const total = services.reduce((sum, service) => sum + service.subtotal, 0);
+
+  const date = dateRaw || new Date().toISOString().slice(0, 10);
+
+  return {
+    id: Date.now(),
+    clientName,
+    email,
+    phone,
+    date,
+    services,
+    total,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function renderHistory(list) {
+  if (!historyList) return;
+  historyList.innerHTML = "";
+
+  if (!list.length) {
+    const empty = document.createElement("li");
+    empty.textContent = "Nenhum orçamento salvo ainda.";
+    empty.className = "history__hint";
+    historyList.appendChild(empty);
+    return;
+  }
+
+  list
+    .slice()
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+    .forEach((budget) => {
+      const li = document.createElement("li");
+      li.className = "history__item";
+
+      const main = document.createElement("div");
+      main.className = "history__item-main";
+      const clientEl = document.createElement("span");
+      clientEl.className = "history__client";
+      clientEl.textContent = budget.clientName;
+      const metaEl = document.createElement("span");
+      metaEl.className = "history__meta";
+      const created = new Date(budget.createdAt);
+      metaEl.textContent = `${budget.date} · ${formatCurrency(budget.total)} · salvo em ${created.toLocaleString("pt-BR")}`;
+      main.appendChild(clientEl);
+      main.appendChild(metaEl);
+
+      const buttons = document.createElement("div");
+      buttons.className = "history__buttons";
+
+      const viewBtn = document.createElement("button");
+      viewBtn.type = "button";
+      viewBtn.className = "history__btn";
+      viewBtn.textContent = "Ver";
+      viewBtn.addEventListener("click", () => {
+        fillResultFromBudget(budget);
+      });
+
+      const txtBtn = document.createElement("button");
+      txtBtn.type = "button";
+      txtBtn.className = "history__btn";
+      txtBtn.textContent = "TXT";
+      txtBtn.addEventListener("click", () => {
+        downloadBudgetTxt(budget);
+      });
+
+      buttons.appendChild(viewBtn);
+      buttons.appendChild(txtBtn);
+
+      li.appendChild(main);
+      li.appendChild(buttons);
+      historyList.appendChild(li);
+    });
+}
+
+function fillResultFromBudget(budget) {
+  if (!budget) return;
+
+  const formData = new FormData();
+  formData.set("clientName", budget.clientName);
+  formData.set("budgetDate", budget.date);
+
+  updateResultPanel(formData, budget.services);
+}
+
+function buildTxtContent(budget) {
+  const lines = [];
+  lines.push("ORÇAMENTO");
+  lines.push("=".repeat(40));
+  lines.push(`Cliente: ${budget.clientName}`);
+  if (budget.email) lines.push(`E-mail: ${budget.email}`);
+  if (budget.phone) lines.push(`Telefone: ${budget.phone}`);
+  lines.push(`Data do orçamento: ${budget.date}`);
+  lines.push("");
+  lines.push("Serviços:");
+  lines.push("Descrição | Qtd. | Valor unitário | Subtotal");
+
+  budget.services.forEach((s) => {
+    lines.push(
+      `${s.name} | ${s.quantity} | ${formatCurrency(s.price)} | ${formatCurrency(s.subtotal)}`
+    );
+  });
+
+  lines.push("");
+  lines.push(`Total: ${formatCurrency(budget.total)}`);
+  lines.push("");
+  lines.push("Gerado pelo Gerador de Orçamento (web).");
+
+  return lines.join("\n");
+}
+
+function sanitizeFileNamePart(text) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\-]+/gi, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toLowerCase()
+    .slice(0, 40);
+}
+
+function downloadBudgetTxt(budget) {
+  if (!budget) return;
+  const content = buildTxtContent(budget);
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  const clientPart = sanitizeFileNamePart(budget.clientName || "cliente");
+  const datePart = sanitizeFileNamePart(budget.date || "");
+  a.download = `orcamento_${clientPart}_${datePart || "data"}.txt`;
+
+  a.href = url;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function setupEvents() {
+  if (addServiceButton) {
+    addServiceButton.addEventListener("click", () => {
+      createServiceRow();
+    });
+  }
+
+  if (budgetForm) {
+    budgetForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const services = getServicesFromForm();
+
+      if (services.length === 0) {
+        alert("Adicione pelo menos um serviço para gerar o orçamento.");
+        return;
+      }
+
+      const hasInvalid = services.some(
+        (service) => !service.name || service.quantity <= 0 || service.price <= 0
+      );
+      if (hasInvalid) {
+        alert("Preencha todos os campos de serviços com valores válidos.");
+        return;
+      }
+
+      const formData = new FormData(budgetForm);
+      const budget = buildBudgetObject(formData, services);
+
+      updateResultPanel(formData, services);
+
+      const list = loadBudgets();
+      list.push(budget);
+      saveBudgets(list);
+      renderHistory(list);
+    });
+  }
+
+  if (printButton) {
+    printButton.addEventListener("click", () => {
+      window.print();
+    });
+  }
+
+  if (downloadTxtButton) {
+    downloadTxtButton.addEventListener("click", () => {
+      const list = loadBudgets();
+      if (!list.length) {
+        alert("Nenhum orçamento salvo ainda para baixar.");
+        return;
+      }
+      const last = list[list.length - 1];
+      downloadBudgetTxt(last);
+    });
+  }
+
+  if (logoutButton) {
+    logoutButton.addEventListener("click", () => {
+      localStorage.removeItem("orcamento_logged_in");
+      window.location.href = "login.html";
+    });
+  }
+}
+
+if (budgetForm) {
   createServiceRow();
-});
-
-budgetForm?.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const services = getServicesFromForm();
-
-  if (services.length === 0) {
-    alert("Adicione pelo menos um serviço para gerar o orçamento.");
-    return;
-  }
-
-  const hasInvalid = services.some((service) => !service.name || service.quantity <= 0 || service.price <= 0);
-  if (hasInvalid) {
-    alert("Preencha todos os campos de serviços com valores válidos.");
-    return;
-  }
-
-  const formData = new FormData(budgetForm);
-  updateResultPanel(formData, services);
-});
-
-createServiceRow();
+  const list = loadBudgets();
+  renderHistory(list);
+  setupEvents();
+}

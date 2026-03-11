@@ -9,8 +9,13 @@
 <body>
   <header class="header">
     <div class="container header__content">
-      <h1 class="logo">Gerador de Orçamento</h1>
-      <p class="subtitle">Crie orçamentos rápidos e profissionais diretamente no navegador.</p>
+      <div>
+        <h1 class="logo">Gerador de Orçamento</h1>
+        <p class="subtitle">Crie, salve, consulte e imprima seus orçamentos.</p>
+      </div>
+      <button type="button" id="logout-button" class="btn btn--ghost">
+        Sair
+      </button>
     </div>
   </header>
 
@@ -55,9 +60,14 @@
             <span class="total__label">Total do orçamento</span>
             <strong id="total-amount" class="total__value">R$ 0,00</strong>
           </div>
-          <button type="submit" class="btn btn--primary">
-            Gerar orçamento
-          </button>
+          <div class="total__actions">
+            <button type="button" id="print-budget" class="btn btn--light">
+              PDF / Imprimir
+            </button>
+            <button type="submit" class="btn btn--primary">
+              Gerar e salvar
+            </button>
+          </div>
         </div>
       </form>
     </section>
@@ -93,8 +103,21 @@
       </div>
 
       <div class="result__footer">
-        <span class="result__total-label">Total</span>
-        <strong id="result-total" class="result__total-value">R$ 0,00</strong>
+        <div class="result__footer-left">
+          <span class="result__total-label">Total</span>
+          <strong id="result-total" class="result__total-value">R$ 0,00</strong>
+        </div>
+        <button type="button" id="download-txt" class="btn btn--light btn--small">
+          Baixar TXT
+        </button>
+      </div>
+
+      <div class="history">
+        <h3 class="history__title">Histórico de orçamentos</h3>
+        <p class="history__hint">Selecione um orçamento salvo para visualizar e imprimir novamente.</p>
+        <ul id="history-list" class="history__list">
+          <!-- Itens de histórico gerados via JS -->
+        </ul>
       </div>
     </section>
   </main>

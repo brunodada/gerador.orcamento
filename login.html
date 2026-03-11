@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Gerador de Orçamento</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header__content">
+      <div>
+        <h1 class="logo">Gerador de Orçamento</h1>
+        <p class="subtitle">Acesse para gerenciar seus orçamentos.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="main container">
+    <section class="card" style="max-width: 420px; margin: 0 auto;">
+      <h2 class="card__title">Login</h2>
+      <form id="login-form" class="form">
+        <div class="form__group">
+          <label for="login-user">Usuário</label>
+          <input type="text" id="login-user" name="user" placeholder="Ex: admin" required />
+        </div>
+        <div class="form__group">
+          <label for="login-password">Senha</label>
+          <input type="password" id="login-password" name="password" placeholder="Ex: 1234" required />
+        </div>
+        <button type="submit" class="btn btn--primary" style="margin-top: 0.5rem;">
+          Entrar
+        </button>
+        <p class="history__hint" style="margin-top: 0.75rem;">
+          Para teste, você pode usar <strong>admin</strong> / <strong>1234</strong>.
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__content">
+      <span>Gerador de Orçamento</span>
+      <span class="footer__small">Área de acesso restrito.</span>
+    </div>
+  </footer>
+
+  <script src="login.js"></script>
+</body>
+</html>
+
