@@ -3,7 +3,7 @@
 const loginForm = document.getElementById("login-form");
 
 const STORED_USER = "admin";
-// SHA-256 da senha "1234"
+
 const STORED_PASSWORD_HASH =
   "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
 
